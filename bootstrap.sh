@@ -1,20 +1,5 @@
 #!/bin/bash
 
-set -e
-
-# first arg is `-f` or `--some-option`
-if [ "${1#-}" != "$1" ]; then
-	set -- haproxy "$@"
-fi
-
-if [ "$1" = 'haproxy' ]; then
-	# if the user wants "haproxy", let's use "haproxy-systemd-wrapper" instead so we can have proper reloadability implemented by upstream
-	shift # "haproxy"
-	set -- "$(which haproxy-systemd-wrapper)" -p /run/haproxy.pid "$@"
-fi
-
-exec "$@"
-
 start_daemon(){
   /opt/logmein-hamachi/bin/hamachid -c /config
   while [ 1 ]; do
@@ -62,4 +47,19 @@ cd /logmein-hamachi-2.1.0.139-x64
 start_daemon
 check_login
 hamachi join $HAMACHI_NET_ACC $HAMACHI_NET_PASS
+
+set -e
+# first arg is `-f` or `--some-option`
+if [ "${1#-}" != "$1" ]; then
+	set -- haproxy "$@"
+fi
+
+if [ "$1" = 'haproxy' ]; then
+	# if the user wants "haproxy", let's use "haproxy-systemd-wrapper" instead so we can have proper reloadability implemented by upstream
+	shift # "haproxy"
+	set -- "$(which haproxy-systemd-wrapper)" -p /run/haproxy.pid "$@"
+fi
+
+exec "$@"
+
 haproxy -f /usr/local/etc/haproxy/haproxy.cfg
